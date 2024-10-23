@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FFT Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Helvetica;
+            line-height: 1.6;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow-y: auto;
+
+        }
+
+        h1 {
+            color: #ff6700;
+            font-style: italic;
+            font-size: 2.5em;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        table {
+            border-collapse: collapse;
+            border: 1px solid #ddd;
+            margin: 20px auto;
+            font-size: large;
+            width: 90%;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 15px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #e77d22; /* Background color to avoid transparency */
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Prevent date and time from breaking onto a new line */
+        th:first-child, td:first-child {
+            white-space: nowrap;
+            width: auto; /* Allows the column to expand to fit content */
+        }
+
+        /* Prevent status from breaking onto a new line */
+        td:last-child {
+            white-space: nowrap;
+        }
+
+        td:nth-child(5) {
+            width: 250px;
+        }
+
+        td:nth-child(2), td:nth-child(3), td:nth-child(4) {
+            width: 150px;
+        }
+
+        .status-ok {
+            color: green;
+            font-size: 18px;
+            font-weight: bold;
+            white-space: nowrap; /* Ensures no line breaks */
+        }
+
+        .status-not-ok {
+            color: red;
+            font-size: 18px;
+            font-weight: bold;
+            white-space: nowrap; /* Ensures no line breaks */
+        }
+
+        .graph-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 30px;
+            gap: 20px;
+        }
+
+        .graph-title {
+            color: #cb356b;
+            font-style: italic;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .graph-container img {
+            width: 500px;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .graph-container img:hover {
+            transform: scale(1.05);
+        }
+
+        .items-card {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 30px;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            max-width: 300px;
+            text-align: center;
+        }
+
+        .card h3 {
+            color: #ff6700;
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            font-size: 1.2em;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Live Dashboard</h1>
+
+    <!-- Table for displaying data -->
+    <table>
+        <thead>
+            <tr>
+                <th>Date and Time</th>
+                <th>Test No</th>
+                <th>Product</th>
+                <th>Serial No</th>
+                <th>File Path</th>
+                <th>Overall Value</th>
+                <th>Result</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ date }} {{ time }}</td>
+                <td>{{ test_id }}</td>
+                <td>{{ product_name }}</td>
+                <td>{{ serial_no }}</td>
+                <td>
+                    <a href="{{ url_for('download_file', file_id=test_id) }}" style="text-decoration: none; color: inherit;">
+                        {{ file_path }}
+                    </a>
+                </td>
+                <td>{{ overall_value | join(', ') }}</td>
+                <td>
+                    <a href="{{ url_for('static', filename='fft_graph.png') }}" download style="text-decoration: none;color: black;">
+                        fft_graph.png
+                    </a>
+                </td>
+                <td class="{% if sample_status == 'ok' %}status-ok{% else %}status-not-ok{% endif %}"> {{ sample_status }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="items-card">
+        <div class="card">
+            <h3>Restriction Items</h3>
+            <p>{{ res_items }}</p>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+
+        socket.on('progress', function(data) {
+            console.log('Received progress data:', data);
+            document.getElementById('progress').innerText = `Progress: ${data.progress}%`;
+        });
+
+        socket.on('results', function(data) {
+            document.getElementById('results').innerHTML = `
+                <p>Sample Status: ${data.sample_status}</p>
+                <p>Overall RMS Value: ${data.overall_rms_value.join(', ')}</p>
+                <p>Upper Limit: ${data.upper_limit}</p>
+                <p>Lower Limit: ${data.lower_limit}</p>
+                <p>Timestamp: ${data.timestamp}</p>
+            `;
+        });
+
+        function updateTimestamp() {
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+
+            const formattedTime = `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+            document.getElementById('timestamp').innerText = formattedTime;
+        }
+
+        setInterval(updateTimestamp, 1000);
+        updateTimestamp();
+    </script>
+</body>
+</html>
