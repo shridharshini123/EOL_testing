@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EOL Reports</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        /* CSS Reset */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            border: 0;
+            font-size: 100%;
+            vertical-align: baseline;
+        }
+
+        body {
+            min-height: 100vh;
+            overflow-x: hidden;
+            margin: 0;
+            font-family: helvetica;
+
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+        }
+
+        .sidebar {
+            height: 100vh;
+            width: 250px; /* Fixed width for sidebar */
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            left: 0;
+            background:#e77d22;
+            overflow-x: hidden;
+            transition: 0.5s;
+            padding-top: 60px;
+            color: white;
+        }
+
+        .sidebar ul {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            margin-top: 50px;
+        }
+
+        .sidebar ul li {
+            position: relative;
+            width: 100%;
+            border-top-left-radius: 30px;
+        }
+
+        .sidebar ul li a {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 0 30px;
+            color: black;
+            text-decoration: none;
+            border-top-left-radius: 30px;
+            border-bottom-left-radius: 30px;
+            position: relative;
+        }
+
+        .sidebar ul li a:hover,
+        .sidebar ul li a.active {
+            background: #ffffff90;
+            line-height: 75px;
+            padding-left: 50px;
+        }
+
+        .sidebar ul li a img {
+            width: 35px;
+            height: 35px;
+            margin-right: 10px;
+            margin-left: 30px;
+            line-height: 75px;
+        }
+
+        .sidebar ul li a .title {
+            white-space: nowrap;
+            position: relative;
+            display: block;
+            padding: 0 10px;
+            height: 60px;
+            line-height: 60px;
+            font-size: large;
+        }
+        .sidebar ul li.logout {
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+        }
+        .sidebar h2 {
+            position: fixed;
+            top: 0;               /* Fix it at the top of the sidebar */
+            width: 230px;          /* Ensure it fits the sidebar width */
+            display: flex;
+            justify-content: center; /* Horizontal center */
+            align-items: center;     /* Vertical center */
+            height: 80px;            /* Adjust height to ensure it's a single line */
+            font-size: 24px;
+            margin: 0;               /* Remove any default margins */
+            text-align: center;      /* Center the text */
+            color: black;            /* Adjust text color if needed */
+            background: #e77d22;     /* Ensure it matches sidebar background */
+            z-index: 1;              /* Ensure it stays above other content */
+        }
+        .logo{
+            position: fixed;
+            top: 10px;
+            left: 58%;
+            transform: translateX(-50%);
+            z-index: 1000;
+        }
+        .logo img {
+            width: 200px;
+            height: auto;
+        }
+
+        .content {
+            margin-left: 300px; /* Match sidebar width */
+            padding: 20px;
+            width: calc(100% - 300px); /* Take remaining width */
+            background: white; /* Background color */
+        }
+
+        .search-container {
+            position: fixed;
+            top: 30px; /* Adjust top as needed */
+            right: 90px; /* Adjust right as needed */
+            width: 250px; /* Fixed width for search container */
+            padding: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-container input[type="text"] {
+            width: 100%;
+            padding: 10px 40px 10px 40px;
+            font-size: 16px;
+            border: 1px solid #e77d22; /* Set the initial border color */
+            background: url('{{ url_for('static', filename='search.png') }}') no-repeat 10px center;
+            background-size: 20px 20px;
+            border-radius: 15px;
+            box-shadow: 0 2px 4px #e77d22; /* Optional for better visibility */
+            transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transition for border color and box-shadow */
+            background-color: white;
+        }
+
+        /* Change border color and box-shadow on focus */
+        .search-container input[type="text"]:focus {
+            border-color:#e77d22; /* Background color to avoid transparency */
+            ; /* Border color when focused */
+            outline: none; /* Remove default outline */
+            box-shadow: 0 0 5px #e77d22; /* Optional: Add a shadow to highlight focus */
+        }
+
+        /* Optional: Additional rule to ensure no other rules override */
+        .search-container input[type="text"] {
+            border: 1px solid #e77d22 !important; /* Force the border color if needed */
+        }
+        /* Adjusted CSS for dropdown styling */
+        .dropdown {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            z-index: 2; /* Ensure dropdown appears above other content */
+        }
+
+        .dropbtn {
+            background-color: transparent; /* Light background color */
+            color: #333; /* Dark text color */
+            padding: 10px;
+            font-size: 20px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s ease; /* Smooth transition for background color */
+        }
+
+        .dropbtn img {
+            width: 42px; /* Adjust as needed */
+            height: 42px; /* Adjust as needed */
+            object-fit: cover;
+            border-radius: 50%; /* Circular image */
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%; /* Position below the button */
+            right: 0;
+            background-color: #fff; /* White background for dropdown */
+            min-width: 200px; /* Adjust width as needed */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Soft shadow for depth */
+            border-radius: 8px; /* Rounded corners */
+            padding: 10px 0; /* Padding for spacing */
+            transition: opacity 0.3s ease, visibility 0.3s ease; /* Smooth transitions */
+            opacity: 0; /* Initially hidden */
+            visibility: hidden; /* Initially hidden */
+        }
+
+        .dropdown-content a {
+            color: #333; /* Dark text color */
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: background-color 0.3s ease; /* Smooth transition for background color */
+        }
+
+        .dropdown-content a:hover {
+            background-color:#e77d22; /* Light background color on hover */
+            color: white;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+            opacity: 1; /* Show dropdown */
+            visibility: visible; /* Show dropdown */
+        }
+
+        .dropdown:hover .dropbtn {
+            background-color:#e77d22; /* Darker background color on hover */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Light shadow on hover */
+        }
+
+
+    </style>
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+    <script>
+        function loadContent(url) {
+            fetch(url)
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('content').innerHTML = data;
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function setActiveLink(clickedLink) {
+            var sidebarLinks = document.querySelectorAll('.sidebar ul li a');
+            sidebarLinks.forEach(link => {
+                link.classList.remove('active');
+            });
+            clickedLink.classList.add('active');
+        }
+
+        function handleClick(url, clickedLink) {
+            loadContent(url);
+            setActiveLink(clickedLink);
+        }
+
+        function handleSubmit(event, url) {
+            event.preventDefault(); // Prevent form submission
+            var form = event.target;
+            var formData = new FormData(form);
+
+            fetch(url, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('content').innerHTML = data; // Update content with response
+                if (data.includes('inserted successfully')) {
+                    alert("File location inserted successfully.");
+                } else {
+                    alert("Insertion failed. Please check the input and try again.");
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+
+        const socket = io();
+
+        socket.on('progress', function(data) {
+            console.log('Received progress data:', data);
+            document.getElementById('progress').innerText = `Progress: ${data.progress}%`;
+        });
+
+        socket.on('results', function(data) {
+            document.getElementById('results').innerHTML = `
+                <p>Sample Status: ${data.sample_status}</p>
+                <p>Overall RMS Value: ${data.overall_rms_value.join(', ')}</p>
+                <p>Upper Limit: ${data.upper_limit}</p>
+                <p>Lower Limit: ${data.lower_limit}</p>
+                <p>Timestamp: ${data.timestamp}</p>
+            `;
+        });
+        function deleteItem(event, url, rowElement) {
+            event.preventDefault();
+
+            if (confirm("Are you sure you want to delete this item?")) {
+                var rawId = rowElement.querySelector('input[name="raw_id"]').value;
+
+                fetch(url, {
+                    method: 'POST',
+                    body: new URLSearchParams({ raw_id: rawId }),
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                })
+                .then(response => {
+                    // Check if response is successful (status code 200-299)
+                    if (!response.ok) {
+                        throw new Error('Network response was not OK');
+                    }
+                    return response.text();  // Read the response as plain text
+                })
+                .then(data => {
+                    if (data.includes('deleted successfully')) {
+                        alert(data);  // Show the success message
+                        rowElement.remove();  // Remove the row after successful deletion
+                    } else {
+                        alert('Error: ' + data);  // Show any error message
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while deleting the item.');
+                });
+            }
+        }
+
+
+        
+        function searchTable() {
+            const searchInput = document.querySelector('.search-container input[name="search"]');
+            const tableRows = document.querySelectorAll('tbody tr');
+            
+            // Convert search term to lowercase for case-insensitive search
+            const searchTerm = searchInput.value.toLowerCase();
+
+            // Loop through table rows to filter based on search term
+            tableRows.forEach((row, index) => {
+                const rowData = row.textContent.toLowerCase();
+
+                // Show/hide row based on whether it matches the search term
+                const isVisible = rowData.includes(searchTerm);
+                row.classList.toggle('hide', !isVisible);
+
+                // Adding a fade-in effect for visible rows with a staggered delay
+                if (isVisible) {
+                    row.style.opacity = '1';
+                    row.style.transitionDelay = `${index * 0.05}s`; // Delay based on index
+                } else {
+                    row.style.opacity = '0'; // Fade-out hidden rows
+                    row.style.transitionDelay = '0s';
+                }
+            });
+
+            // Apply alternating background color for visible rows
+            let visibleRows = [...document.querySelectorAll('tbody tr:not(.hide)')];
+            visibleRows.forEach((row, i) => {
+                row.style.backgroundColor = (i % 2 === 0) ? 'transparent' : '#0000000b'; // Alternating background
+            });
+        }
+       // function updateTimestamp() {
+        //    const now = new Date();
+          //  const day = String(now.getDate()).padStart(2, '0');
+            //const month = String(now.getMonth() + 1).padStart(2, '0'); // January is 0!
+            //const year = now.getFullYear();
+            //const hours = String(now.getHours()).padStart(2, '0');
+            //const minutes = String(now.getMinutes()).padStart(2, '0');
+            //const seconds = String(now.getSeconds()).padStart(2, '0');
+
+            //const formattedTime = `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+            //document.getElementById('timestamp').innerText = formattedTime;
+        //}
+
+        // Update the timestamp every second
+        //setInterval(updateTimestamp, 1000);
+        // Initial call to set the timestamp immediately
+        //updateTimestamp();
+        // Function to read the file
+        function readFile(filePath) {
+            // Create a hidden form to submit the file path
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/read_file';  // Make sure this matches your Flask route
+
+            // Create a hidden input for the file path
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'file_path';
+            input.value = filePath;
+            form.appendChild(input);
+
+            document.body.appendChild(form);
+            form.submit();  // Submit the form
+        }
+
+        function loadGraph(fileName) {
+            // Example of how you might fetch the file and generate the graph
+            fetch(`/read_file?file_name=${fileName}`)
+            .then(response => response.json())
+            .then(data => {
+                // Assuming the response contains the graph image URL
+                const graphContainer = document.getElementById('graph-container');
+                graphContainer.innerHTML = `<img src="data:image/png;base64,${data.graph_url}" alt="Graph for ${fileName}">`;
+            })
+            .catch(error => {
+                console.error('Error loading the graph:', error);
+            });
+        }
+
+    </script>
+</head>
+<body>
+    <div class="nav">
+        <div class="search-container">
+            <input type="text" name="search" placeholder="Search" oninput="searchTable()">
+        </div>
+        <div class="dropdown">
+            <button class="dropbtn" onclick="handleClick('/update_profile')">
+                {% if profile_image %}
+                <img src="data:image/{{ image_format }};base64,{{ profile_image|b64encode }}" alt="Profile Image">
+                {% else %}
+                <img src="{{ url_for('static', filename='img_avatar.png') }}" alt="Image">
+                {% endif %}
+            </button>
+        </div>
+    </div>
+    <div class="logo">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="logo">
+    </div>
+    <div class="container">
+        <div class="sidebar">
+            <h2>
+                VibePro
+            </h2>
+            <ul>
+                <!--li>
+                    <a href="javascript:void(0)" onclick="handleClick('/',this)">
+                        <img src="{{ url_for('static', filename='login.png') }}" alt="items" class="item">
+                        <span class="title">Login</span>
+                    </a>
+                </li-->
+                <li>
+                    <a href="javascript:void(0)" onclick="handleClick('/dashboard', this)" id="dashboard-button">
+                        <img src="{{ url_for('static', filename='dashboard.png') }}" alt="dashboard" class="item">
+                        <span class="title">Dashboard</span>
+                    </a>
+                </li>
+                <!--li>
+                    <a href="javascript:void(0)" onclick="handleClick('/sample_details',this)">
+                        <img src="{{ url_for('static', filename='description.png') }}" alt="items" class="item">
+                        <span class="title">Sample Details</span>
+                    </a>
+                </li-->
+                <li>
+                    <a href="javascript:void(0)" onclick="handleClick('/raw_data',this)">
+                        <img src="{{ url_for('static', filename='item.png') }}" alt="items" class="item">
+                        <span class="title">Raw Data</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="javascript:void(0)" onclick="handleClick('/rms',this)">
+                        <img src="{{ url_for('static', filename='rms.png') }}" alt="items" class="item">
+                        <span class="title">Analysis</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="javascript:void(0)" onclick="handleClick('/sample_status',this)">
+                        <img src="{{ url_for('static', filename='status.png') }}" alt="items" class="item">
+                        <span class="title">Result</span>
+                    </a>
+                </li>
+                <li class="logout">
+                    <a href="/logout" class="nav">
+                        <i class="fas fa-power-off"></i>
+                        <span class="title" style="font-size: 18px;">Logout</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="content">
+            <div id="content">
+                <!-- Dynamic content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</body>
+</html>

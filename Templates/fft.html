@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph Display</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='back.css') }}">
+
+    <style>
+        body {
+            overflow-y: hidden;
+            margin: 0;
+            padding: 0;
+            font-family: helvetica;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            gap: 20px;
+            max-width: 1200px;
+            margin: auto;
+            flex-wrap: wrap; /* Allows items to wrap on smaller screens */
+        }
+
+        .graph {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background: #ffffff;
+            padding: 10px;
+            flex: 2 1 70%; /* Allows the graph to grow and shrink, with a base of 70% width */
+            max-width: 70%;
+            box-sizing: border-box; /* Includes padding and border in element’s total width and height */
+        }
+
+        .graph img {
+            border-radius: 8px;
+            max-height: 500px; /* Control the maximum height of the image */
+            width: 100%; /* Ensure image takes full width of its container */
+            height: auto; /* Maintain aspect ratio */
+            object-fit: contain; /* Ensure image fits within container without distortion */
+            transition: transform 0.3s ease;
+        }
+
+        .graph img:hover {
+            transform: scale(1.05);
+        }
+
+        .data-card {
+            border: 1px solid #ccc;
+            padding: 20px;
+            width: 400px; /* Fixed width for better alignment */
+            text-align: center;
+            border-radius: 8px;
+            background: linear-gradient(to right, #cb356b, #bd3f32);
+            color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+     
+            box-sizing: border-box; /* Includes padding and border in element’s total width and height */
+        }
+
+        .data-card h2 {
+            font-size: 2.0em; /* Font size adjustment */
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .data-card p {
+            font-size: 1.6em; /* Font size adjustment */
+            margin: 0;
+            font-weight: bold;
+        }
+        .graph .fft {
+            max-height: 400px; /* Control the maximum height of the image */
+            width: 100%; /* Ensure image takes full width of its container */
+            border-radius: 8px;
+
+        }
+        .graph {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 8px;
+            padding: 10px;
+            flex: 2 1 70%; /* Allows the graph to grow and shrink, with a base of 70% width */
+            max-width: 70%;
+            box-sizing: border-box; /* Includes padding and border in element’s total width and height */
+            gap: 30px;
+        }
+
+        .graph .rms {
+            border-radius: 8px;
+            max-height: 500px; /* Control the maximum height of the image */
+            width: 100%; /* Ensure image takes full width of its container */
+            height: auto; /* Maintain aspect ratio */
+            object-fit: contain; /* Ensure image fits within container without distortion */
+            transition: transform 0.3s ease;
+        }
+
+        .graph img:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="graph">
+        <!-- Render FFT graph from database -->
+        <img src="/graph/Frequency Spectrum" alt="FFT Graph" class="fft" >
+        <!-- Render RMS graph from database -->
+        <img src="/graph/Level Analysis" alt="RMS Graph" class="rms" >
+    </div>
+</body>
+</html>

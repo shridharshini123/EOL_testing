@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph View</title>
+    <style>
+        h1 {
+            color: rgb(182, 15, 70);
+            text-align: center;
+            margin: 20px 0;
+            font-size: 2.5em;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+        .graph {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 8px;
+            padding: 10px;
+            flex: 2 1 70%; /* Allows the graph to grow and shrink, with a base of 70% width */
+            max-width: 70%;
+            box-sizing: border-box; /* Includes padding and border in element’s total width and height */
+            margin-left: 100px;
+        }
+
+        .graph img {
+            border-radius: 8px;
+            max-height: 500px; /* Control the maximum height of the image */
+            width: 100%; /* Ensure image takes full width of its container */
+            height: auto; /* Maintain aspect ratio */
+            object-fit: contain; /* Ensure image fits within container without distortion */
+            transition: transform 0.3s ease;
+        }
+
+        .graph img:hover {
+            transform: scale(1.05);
+        }
+
+    </style>
+</head>
+<body>
+    <div class="graph">
+        {% if graph_url %}
+            <img src="data:image/png;base64,{{ graph_url }}" alt="Graph">
+        {% else %}
+            <p>No graph available. {{ message if message else 'Please check the file.' }}</p>
+        {% endif %}
+    </div>
+</body>
+</html>
